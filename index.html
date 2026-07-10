@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#183f4d">
+  <meta name="description" content="Project 13 — 把生活累積成一個會記得你的世界。">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Project 13</title>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="scene" id="scene" aria-label="Project 13 室內窗景">
+      <img class="layer layer-background" src="assets/background/room-window.png" alt="陽光灑入的海景房間">
+      <div class="layer light-wash" aria-hidden="true"></div>
+
+      <header class="layer hud" aria-label="角色與資源狀態">
+        <button class="profile-card glass" data-open="status" aria-label="開啟 13 的角色狀態">
+          <span class="avatar">13</span>
+          <span class="profile-copy">
+            <strong>13</strong>
+            <span id="levelText">Lv.1・旅人</span>
+            <span class="exp-track"><i id="expBar"></i></span>
+            <small id="expText">0 / 100 EXP</small>
+          </span>
+        </button>
+
+        <div class="resource-bar glass" aria-label="資源">
+          <button class="resource" data-resource="shells" aria-label="查看貝殼紀錄"><span>🐚</span><b id="shellCount">0</b></button>
+          <button class="resource" data-resource="stars" aria-label="查看星星紀錄"><span>⭐</span><b id="starCount">0</b></button>
+          <button class="resource" data-resource="bottles" aria-label="查看漂流瓶紀錄"><span>🍾</span><b id="bottleCount">0</b></button>
+        </div>
+      </header>
+
+      <button class="layer companion glass" id="companionBtn" aria-label="和貓咪 AI GM 說話"><img src="assets/sprites/cat-gm.png" alt=""><span><small>AI GM</small>貓咪旅伴</span></button>
+      <button class="layer world-area street glass" id="streetBtn" aria-label="街道區域"><span>🏡</span><span>街道</span></button>
+
+      <button class="layer cat-sprite" id="catBtn" aria-label="摸摸貓咪">
+        <img src="assets/sprites/cat-gm.png" alt="窗邊的貓咪">
+      </button>
+
+      <button class="layer bottle-sprite" id="bottleBtn" aria-label="打開漂流瓶">
+        <img src="assets/sprites/bottle.png" alt="漂流瓶">
+      </button>
+
+      <button class="layer world-shot glass" id="worldShotBtn" aria-label="拍攝世界留影"><span>📷</span><span>世界留影</span></button>
+      <div class="layer music-player glass" aria-label="背景音樂控制">
+        <button id="musicToggle" aria-label="播放背景音樂">♪</button>
+        <label><span>窗邊旅程</span><input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.45" aria-label="背景音樂音量"></label>
+        <audio id="bgm" src="assets/sound/bgm.mp3" loop preload="metadata"></audio>
+      </div>
+
+      <nav class="layer bottom-dock" aria-label="主要功能">
+        <button class="dock-button" data-open="journal"><img src="assets/ui/journal-v2.png" alt=""><span>世界紀錄</span></button>
+        <button class="dock-button" data-open="journey"><img src="assets/ui/journey-v2.png" alt=""><span>今日旅程</span></button>
+        <button class="dock-button" data-open="kitchen"><img src="assets/ui/kitchen-v2.png" alt=""><span>廚房</span></button>
+        <button class="dock-button" data-open="gallery"><img src="assets/ui/gallery-v2.png" alt=""><span>回憶館</span></button>
+        <button class="dock-button" data-open="boss"><img src="assets/ui/boss-v2.png" alt=""><span>Boss</span></button>
+      </nav>
+
+      <div id="floatRewards" class="layer float-rewards" aria-live="polite"></div>
+      <div id="toast" class="layer toast" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <dialog id="modal">
+    <div class="modal-shell">
+      <header class="modal-head">
+        <div><small>PROJECT 13・FOUNDATION</small><h2 id="modalTitle"></h2></div>
+        <button id="closeModal" class="close-btn" aria-label="關閉">×</button>
+      </header>
+      <section id="modalBody" class="modal-body"></section>
+    </div>
+  </dialog>
+
+  <template id="tpl-status">
+    <div class="stack">
+      <section class="card status-summary"><div class="big-avatar">13</div><div><h3>今天的 13</h3><p>狀態沒有好壞，只是幫你看見今天還剩多少能量。</p></div></section>
+      <section class="card meters">
+        <label>❤️ HP・身體與承受力 <output id="hpValue"></output><input type="range" id="hpInput" min="0" max="100"></label>
+        <label>🧠 MP・思考與情緒能量 <output id="mpValue"></output><input type="range" id="mpInput" min="0" max="100"></label>
+        <label>🌱 恢復值 <output id="recoveryValue"></output><input type="range" id="recoveryInput" min="0" max="100"></label>
+        <button class="primary" id="saveStatus">儲存今天的狀態</button>
+      </section>
+    </div>
+  </template>
+
+  <template id="tpl-journal">
+    <div class="stack">
+      <section class="card form-card">
+        <label>今天的心情<select id="moodInput"><option>平靜</option><option>開心</option><option>疲累</option><option>難過</option><option>生氣</option><option>混亂</option></select></label>
+        <label>今天發生了什麼？<textarea id="journalInput" rows="6" placeholder="一句話也可以。"></textarea></label>
+        <label>今天值得留下的小事<input id="smallWinInput" placeholder="例如：有去上兩小時的班"></label>
+        <button class="primary" id="saveJournal">保存世界紀錄</button>
+      </section>
+      <section class="card"><div id="journalList" class="timeline"></div></section>
+    </div>
+  </template>
+
+  <template id="tpl-journey">
+    <div class="stack">
+      <section class="card"><div class="section-title"><div><h3>今天想做什麼？</h3><p>沒完成不扣分，明天仍可重新開始。</p></div><span id="journeyProgress" class="pill"></span></div><div id="taskList" class="task-list"></div></section>
+      <section class="card inline-form"><input id="newTaskInput" placeholder="新增一個小旅程"><input id="newTaskReward" type="number" min="1" max="50" value="10" aria-label="經驗值"><button id="addTaskBtn">新增</button></section>
+    </div>
+  </template>
+
+  <template id="tpl-kitchen">
+    <div class="stack">
+      <section class="card form-card">
+        <div class="grid2"><label>體重（kg）<input id="weightInput" type="number" step="0.1"></label><label>腰圍（cm）<input id="waistInput" type="number" step="0.1"></label></div>
+        <label>今天吃了什麼？<textarea id="foodInput" rows="4" placeholder="不用計算得很完美，如實記錄就好。"></textarea></label>
+        <label>身體感受<input id="bodyInput" placeholder="例如：很飽、精神還可以"></label>
+        <div class="check-grid"><label><input type="checkbox" id="waterCheck">喝到足夠的水</label><label><input type="checkbox" id="vegCheck">吃到蔬菜</label><label><input type="checkbox" id="proteinCheck">吃到蛋白質</label><label><input type="checkbox" id="moveCheck">活動至少 5 分鐘</label></div>
+        <button class="primary" id="saveKitchen">保存廚房紀錄</button>
+      </section>
+      <section class="card"><div id="kitchenList" class="timeline"></div></section>
+    </div>
+  </template>
+
+  <template id="tpl-gallery">
+    <div class="stack">
+      <section class="card form-card"><h3>加入現實照片</h3><input id="photoInput" type="file" accept="image/*" multiple><input id="photoCaption" placeholder="替這段回憶留一句話"><button class="primary" id="savePhotos">加入回憶館</button></section>
+      <section class="card"><div class="gallery-toolbar"><div class="segmented"><button class="active" data-filter="all">全部</button><button data-filter="reality">現實照片</button><button data-filter="world">世界留影</button><button data-filter="kept">已保留</button></div><span id="galleryCount"></span></div><div id="galleryGrid" class="gallery-grid"></div></section>
+    </div>
+  </template>
+
+  <template id="tpl-boss">
+    <div class="stack">
+      <section class="card form-card">
+        <label>今天遇到的 Boss<select id="bossSelect"><option>小孩 Boss</option><option>100 分魔王</option><option>拖延怪</option><option>自我否定怪</option><option>疲勞 Debuff</option><option>工作 Boss</option><option>其他</option></select></label>
+        <label>發生什麼事？<textarea id="bossEvent" rows="4"></textarea></label>
+        <label>13 使用了什麼技能？<input id="bossSkill" placeholder="例如：先離開喝水、只做五分鐘"></label>
+        <label>結果如何？<select id="bossResult"><option>平安撐過</option><option>稍微有效</option><option>仍在戰鬥</option><option>需要支援</option></select></label>
+        <button class="primary" id="saveBoss">記錄這場戰鬥</button>
+      </section>
+      <section class="card"><div id="bossList" class="timeline"></div></section>
+    </div>
+  </template>
+
+  <template id="tpl-resource">
+    <div class="stack"><section class="card resource-summary"><div id="resourceBigIcon"></div><div><h3 id="resourceAmount"></h3><p id="resourceDescription"></p></div></section><section class="card"><h3>最近獲得紀錄</h3><div id="resourceLog" class="timeline"></div></section></div>
+  </template>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

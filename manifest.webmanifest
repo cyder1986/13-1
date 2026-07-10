@@ -1,0 +1,11 @@
+{
+  "name": "Project 13",
+  "short_name": "Project 13",
+  "description": "把生活累積成一個會記得你的世界。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#123b4d",
+  "theme_color": "#183f4d",
+  "icons": [{"src":"assets/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
